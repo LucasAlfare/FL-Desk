@@ -8,10 +8,7 @@ import com.lucasalfare.fldesk.database.repository.StockRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 class StockRepositoryTest {
 
@@ -80,5 +77,58 @@ class StockRepositoryTest {
     }
 
     assertEquals(expected = initialQuantity, actual = quantity)
+  }
+
+  @Test
+  fun `test get quantity of product failure`() {
+    val initialQuantity = 10
+
+    runBlocking {
+      AtomicExecutor.exec {
+        assertThrows<AppError> {
+          StockRepository.insert(0, initialQuantity)
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `test update stock quantity true success`() {
+    val productId = runBlocking {
+      AtomicExecutor.exec {
+        ProductsRepository.create("Dummy", 100, "00000000001")
+      }
+    }
+
+    val initialQuantity = 10
+
+    runBlocking {
+      AtomicExecutor.exec {
+        StockRepository.insert(productId, initialQuantity)
+      }
+    }
+
+    val updateResult = runBlocking {
+      AtomicExecutor.exec {
+        assertDoesNotThrow {
+          StockRepository.updateQuantity(productId, initialQuantity * 2)
+        }
+      }
+    }
+
+    assertTrue(updateResult)
+  }
+
+  @Test
+  fun `test update stock quantity false success`() {
+    val updateResult = runBlocking {
+      AtomicExecutor.exec {
+        assertDoesNotThrow {
+          StockRepository.updateQuantity(0, 1)
+        }
+      }
+    }
+
+    assertFalse(updateResult)
   }
 }
