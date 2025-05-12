@@ -1,13 +1,16 @@
 package com.lucasalfare.fldesk.database.repository
 
 import com.lucasalfare.flbase.AppError
-import com.lucasalfare.fldesk.*
+import com.lucasalfare.fldesk.PaymentType
+import com.lucasalfare.fldesk.Sale
+import com.lucasalfare.fldesk.SoldProduct
 import com.lucasalfare.fldesk.database.SaleItems
 import com.lucasalfare.fldesk.database.Sales
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 
@@ -16,13 +19,25 @@ object SalesRepository {
   fun createSale(
     instant: Instant,
     total: Int,
-    paymentType: PaymentType
+    paymentType: PaymentType,
+    items: List<SoldProduct>
   ): Int = runCatching {
-    Sales.insertAndGetId {
+    val saleId = Sales.insertAndGetId {
       it[Sales.instant] = instant.toLocalDateTime(TimeZone.UTC)
       it[Sales.total] = total
       it[Sales.paymentType] = paymentType
     }.value
+
+    items.forEach { sp ->
+      SaleItems.insert { it2 ->
+        it2[SaleItems.saleId] = saleId
+        it2[SaleItems.productId] = sp.productId
+        it2[SaleItems.quantitySold] = sp.quantitySold
+        it2[SaleItems.priceAtMoment] = sp.priceAtMoment
+      }
+    }
+
+    saleId
   }.getOrElse {
     throw AppError("Error creating sale registry.")
   }
