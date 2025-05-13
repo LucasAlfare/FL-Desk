@@ -43,9 +43,7 @@ class SaleUsecases(
   }
 
   suspend fun getAllSales(): List<Sale> = runCatching {
-    executor.exec {
-      sales.getAll()
-    }
+    executor.exec { sales.getAll() }
   }.getOrElse {
     throw AppError("error getting all sales", parent = it)
   }
