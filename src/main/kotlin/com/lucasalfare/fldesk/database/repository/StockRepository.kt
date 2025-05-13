@@ -14,7 +14,7 @@ object StockRepository {
       it[Stock.quantity] = quantity
     }.value
   }.getOrElse {
-    throw AppError("Error inserting product in stock.")
+    throw AppError("Error inserting product in stock.", parent = it)
   }
 
   fun getQuantityOf(productId: Int): Int = runCatching {
@@ -23,7 +23,7 @@ object StockRepository {
       else it[Stock.quantity]
     }
   }.getOrElse {
-    throw AppError("Error getting stock product quantity by product ID.")
+    throw AppError("Error getting stock product quantity by product ID.", parent = it)
   }
 
   fun updateQuantity(productId: Int, newQuantity: Int): Boolean = runCatching {
@@ -31,6 +31,6 @@ object StockRepository {
       it[Stock.quantity] = newQuantity
     } > 0
   }.getOrElse {
-    throw AppError("Error updating stock product quantity by product ID.")
+    throw AppError("Error updating stock product quantity by product ID.", parent = it)
   }
 }

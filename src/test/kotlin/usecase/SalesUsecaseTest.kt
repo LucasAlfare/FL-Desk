@@ -57,7 +57,6 @@ class SalesUsecaseTest {
     }
 
     val salesUsecase = SaleUsecases(
-      ProductsRepository,
       StockRepository,
       SalesRepository,
       AtomicExecutor

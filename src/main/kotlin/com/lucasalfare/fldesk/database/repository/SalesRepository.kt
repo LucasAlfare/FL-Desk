@@ -87,7 +87,7 @@ object SalesRepository {
           )
         }
       }.getOrElse {
-        throw AppError("Error retrieving sold items from SaleItems table.")
+        throw AppError("Error retrieving sold items from SaleItems table.", parent = it)
       }
 
       Sale(
@@ -98,7 +98,7 @@ object SalesRepository {
       )
     }
   }.getOrElse {
-    throw AppError("Error retrieving sales by date range.")
+    throw AppError("Error retrieving sales by date range.", parent = it)
   }
 
   fun getAll(): List<Sale> = runCatching {
@@ -114,7 +114,7 @@ object SalesRepository {
           )
         }
       }.getOrElse {
-        throw AppError("Error retrieving sold items from SaleItems table.")
+        throw AppError("Error retrieving sold items from SaleItems table.", parent = it)
       }
 
       Sale(
@@ -125,6 +125,6 @@ object SalesRepository {
       )
     }
   }.getOrElse {
-    throw AppError("Error getting all the sales registries.")
+    throw AppError("Error getting all the sales registries.", parent = it)
   }
 }

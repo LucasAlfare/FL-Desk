@@ -15,8 +15,8 @@ object ProductsRepository {
       it[Products.price] = price
       it[Products.barcode] = barcode
     }.value
-  }.getOrElse { error ->
-    throw AppError("Error inserting new product in the database.")
+  }.getOrElse {
+    throw AppError("Error inserting new product in the database.", parent = it)
   }
 
   fun getById(id: Int): Product? = runCatching {
@@ -30,7 +30,7 @@ object ProductsRepository {
       )
     }
   }.getOrElse {
-    throw AppError("Error on getting product by ID.")
+    throw AppError("Error on getting product by ID.", parent = it)
   }
 
   fun getByName(name: String): Product? = runCatching {
@@ -44,7 +44,7 @@ object ProductsRepository {
       )
     }
   }.getOrElse {
-    throw AppError("Error on getting product by name.")
+    throw AppError("Error on getting product by name.", parent = it)
   }
 
   fun updatePrice(id: Int, newPrice: Int): Boolean = runCatching {
@@ -52,6 +52,6 @@ object ProductsRepository {
       it[Products.price] = newPrice
     } > 0
   }.getOrElse {
-    throw AppError("Error updating price of product by ID.")
+    throw AppError("Error updating price of product by ID.", parent = it)
   }
 }

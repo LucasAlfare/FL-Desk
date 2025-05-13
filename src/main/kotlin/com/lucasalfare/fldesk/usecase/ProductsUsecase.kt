@@ -20,7 +20,7 @@ class ProductsUsecase(
       stock.insert(productId = productId, quantity = request.quantity)
       productId
     }.getOrElse {
-      throw AppError("Error inserting product in the system with the following input request: [$request]")
+      throw AppError("Error inserting product in the system with the following input request: [$request]", parent = it)
     }
   }
 

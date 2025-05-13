@@ -4,14 +4,12 @@ import com.lucasalfare.flbase.AppError
 import com.lucasalfare.fldesk.Sale
 import com.lucasalfare.fldesk.SoldProduct
 import com.lucasalfare.fldesk.database.AtomicExecutor
-import com.lucasalfare.fldesk.database.repository.ProductsRepository
 import com.lucasalfare.fldesk.database.repository.SalesRepository
 import com.lucasalfare.fldesk.database.repository.StockRepository
 import com.lucasalfare.fldesk.model.CommitSaleRequestDTO
 import kotlinx.datetime.Clock
 
 class SaleUsecases(
-  private val products: ProductsRepository,
   private val stock: StockRepository,
   private val sales: SalesRepository,
   private val executor: AtomicExecutor
@@ -33,7 +31,7 @@ class SaleUsecases(
 
       sales.createSale(instant, request.paymentType, soldItems)
     }.getOrElse {
-      throw AppError("Error commiting the sale.")
+      throw AppError("Error commiting the sale.", parent = it)
     }
   }
 
@@ -41,7 +39,7 @@ class SaleUsecases(
     runCatching {
       sales.getAll()
     }.getOrElse {
-      throw AppError("error getting all sales")
+      throw AppError("error getting all sales", parent = it)
     }
   }
 }
