@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 
 object AtomicExecutor {
 
-  suspend fun <R> exec(scope: () -> R): R = newSuspendedTransaction {
+  suspend fun <R> exec(scope: suspend () -> R): R = newSuspendedTransaction {
     scope()
   }
 }

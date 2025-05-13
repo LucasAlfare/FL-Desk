@@ -1,4 +1,4 @@
-package com.lucasalfare.fldesk.model
+package com.lucasalfare.fldesk.model.dto
 
 import com.lucasalfare.flbase.AppError
 import kotlinx.serialization.Serializable

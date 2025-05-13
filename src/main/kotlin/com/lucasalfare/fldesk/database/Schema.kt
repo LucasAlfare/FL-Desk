@@ -1,6 +1,6 @@
 package com.lucasalfare.fldesk.database
 
-import com.lucasalfare.fldesk.PaymentType
+import com.lucasalfare.fldesk.model.PaymentType
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 

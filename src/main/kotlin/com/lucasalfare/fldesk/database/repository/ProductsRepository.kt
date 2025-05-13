@@ -1,8 +1,8 @@
 package com.lucasalfare.fldesk.database.repository
 
 import com.lucasalfare.flbase.AppError
-import com.lucasalfare.fldesk.Product
 import com.lucasalfare.fldesk.database.Products
+import com.lucasalfare.fldesk.model.Product
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update

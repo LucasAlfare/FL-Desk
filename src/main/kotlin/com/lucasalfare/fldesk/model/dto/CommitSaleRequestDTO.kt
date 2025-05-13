@@ -1,8 +1,8 @@
-package com.lucasalfare.fldesk.model
+package com.lucasalfare.fldesk.model.dto
 
 import com.lucasalfare.flbase.AppError
-import com.lucasalfare.fldesk.PaymentType
-import com.lucasalfare.fldesk.SoldProduct
+import com.lucasalfare.fldesk.model.PaymentType
+import com.lucasalfare.fldesk.model.SoldProduct
 import kotlinx.serialization.Serializable
 
 @Serializable

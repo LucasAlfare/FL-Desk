@@ -1,15 +1,15 @@
 package repository
 
-import com.lucasalfare.fldesk.PaymentType
-import com.lucasalfare.fldesk.Product
-import com.lucasalfare.fldesk.Sale
-import com.lucasalfare.fldesk.SoldProduct
 import com.lucasalfare.fldesk.database.AtomicExecutor
 import com.lucasalfare.fldesk.database.ExposedDatabase
 import com.lucasalfare.fldesk.database.repository.ProductsRepository
 import com.lucasalfare.fldesk.database.repository.SalesRepository
 import com.lucasalfare.fldesk.database.repository.StockRepository
-import com.lucasalfare.fldesk.model.IncludeProductInSystemRequestDTO
+import com.lucasalfare.fldesk.model.PaymentType
+import com.lucasalfare.fldesk.model.Product
+import com.lucasalfare.fldesk.model.Sale
+import com.lucasalfare.fldesk.model.SoldProduct
+import com.lucasalfare.fldesk.model.dto.IncludeProductInSystemRequestDTO
 import com.lucasalfare.fldesk.usecase.ProductsUsecase
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock

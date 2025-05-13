@@ -1,10 +1,10 @@
 package repository
 
 import com.lucasalfare.flbase.AppError
-import com.lucasalfare.fldesk.Product
 import com.lucasalfare.fldesk.database.AtomicExecutor
 import com.lucasalfare.fldesk.database.ExposedDatabase
 import com.lucasalfare.fldesk.database.repository.ProductsRepository
+import com.lucasalfare.fldesk.model.Product
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows

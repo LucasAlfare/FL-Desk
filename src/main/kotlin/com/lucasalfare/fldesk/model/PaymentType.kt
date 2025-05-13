@@ -1,4 +1,4 @@
-package com.lucasalfare.fldesk
+package com.lucasalfare.fldesk.model
 
 enum class PaymentType {
   Cash, Credit, Debit, Pix

@@ -1,11 +1,11 @@
 package com.lucasalfare.fldesk.database.repository
 
 import com.lucasalfare.flbase.AppError
-import com.lucasalfare.fldesk.PaymentType
-import com.lucasalfare.fldesk.Sale
-import com.lucasalfare.fldesk.SoldProduct
 import com.lucasalfare.fldesk.database.SaleItems
 import com.lucasalfare.fldesk.database.Sales
+import com.lucasalfare.fldesk.model.PaymentType
+import com.lucasalfare.fldesk.model.Sale
+import com.lucasalfare.fldesk.model.SoldProduct
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant

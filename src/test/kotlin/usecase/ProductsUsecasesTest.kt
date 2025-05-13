@@ -4,7 +4,7 @@ import com.lucasalfare.fldesk.database.AtomicExecutor
 import com.lucasalfare.fldesk.database.ExposedDatabase
 import com.lucasalfare.fldesk.database.repository.ProductsRepository
 import com.lucasalfare.fldesk.database.repository.StockRepository
-import com.lucasalfare.fldesk.model.IncludeProductInSystemRequestDTO
+import com.lucasalfare.fldesk.model.dto.IncludeProductInSystemRequestDTO
 import com.lucasalfare.fldesk.usecase.ProductsUsecase
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.assertDoesNotThrow

@@ -1,12 +1,12 @@
 package com.lucasalfare.fldesk.usecase
 
 import com.lucasalfare.flbase.AppError
-import com.lucasalfare.fldesk.Sale
-import com.lucasalfare.fldesk.SoldProduct
 import com.lucasalfare.fldesk.database.AtomicExecutor
 import com.lucasalfare.fldesk.database.repository.SalesRepository
 import com.lucasalfare.fldesk.database.repository.StockRepository
-import com.lucasalfare.fldesk.model.CommitSaleRequestDTO
+import com.lucasalfare.fldesk.model.Sale
+import com.lucasalfare.fldesk.model.SoldProduct
+import com.lucasalfare.fldesk.model.dto.CommitSaleRequestDTO
 import kotlinx.datetime.Clock
 
 class SaleUsecases(
@@ -15,8 +15,11 @@ class SaleUsecases(
   private val executor: AtomicExecutor
 ) {
 
-  suspend fun commitSale(request: CommitSaleRequestDTO): Int = executor.exec {
-    runCatching {
+  suspend fun commitSale(
+    request: CommitSaleRequestDTO,
+    onSaleCommited: suspend () -> Unit = {}
+  ): Int = runCatching {
+    executor.exec {
       val instant = Clock.System.now()
       val soldItems = request.items.map { item ->
         val currentQuantity = stock.getQuantityOf(item.productId)
@@ -29,17 +32,21 @@ class SaleUsecases(
         SoldProduct(item.productId, item.quantitySold, item.priceAtMoment)
       }
 
-      sales.createSale(instant, request.paymentType, soldItems)
-    }.getOrElse {
-      throw AppError("Error commiting the sale.", parent = it)
+      val saleId = sales.createSale(instant, request.paymentType, soldItems)
+
+      onSaleCommited() // calls the post callback after the process
+
+      saleId
     }
+  }.getOrElse {
+    throw AppError("Error commiting the sale.", parent = it)
   }
 
-  suspend fun getAllSales(): List<Sale> = executor.exec {
-    runCatching {
+  suspend fun getAllSales(): List<Sale> = runCatching {
+    executor.exec {
       sales.getAll()
-    }.getOrElse {
-      throw AppError("error getting all sales", parent = it)
     }
+  }.getOrElse {
+    throw AppError("error getting all sales", parent = it)
   }
 }
