@@ -18,13 +18,12 @@ object SalesRepository {
 
   fun createSale(
     instant: Instant,
-    total: Int,
     paymentType: PaymentType,
     items: List<SoldProduct>
   ): Int = runCatching {
     val saleId = Sales.insertAndGetId {
       it[Sales.instant] = instant.toLocalDateTime(TimeZone.UTC)
-      it[Sales.total] = total
+      it[Sales.total] = items.sumOf { p -> p.priceAtMoment }
       it[Sales.paymentType] = paymentType
     }.value
 
@@ -68,6 +67,38 @@ object SalesRepository {
     }
   }.getOrElse {
     throw AppError("Error retrieving Sale registry.")
+  }
+
+  fun getByDateRange(start: Instant, end: Instant): List<Sale> = runCatching {
+    Sales.selectAll().where {
+      Sales.instant.between(
+        start.toLocalDateTime(TimeZone.UTC),
+        end.toLocalDateTime(TimeZone.UTC)
+      )
+    }.map {
+      val currentSaleId = it[Sales.id].value
+
+      val soldItems = runCatching {
+        SaleItems.selectAll().where { SaleItems.saleId eq currentSaleId }.map { si ->
+          SoldProduct(
+            productId = si[SaleItems.productId],
+            quantitySold = si[SaleItems.quantitySold],
+            priceAtMoment = si[SaleItems.priceAtMoment]
+          )
+        }
+      }.getOrElse {
+        throw AppError("Error retrieving sold items from SaleItems table.")
+      }
+
+      Sale(
+        id = currentSaleId,
+        instant = it[Sales.instant].toInstant(TimeZone.UTC),
+        paymentType = it[Sales.paymentType],
+        soldProducts = soldItems
+      )
+    }
+  }.getOrElse {
+    throw AppError("Error retrieving sales by date range.")
   }
 
   fun getAll(): List<Sale> = runCatching {
