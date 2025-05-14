@@ -6,17 +6,18 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object ExposedDatabase {
 
+  private val sqliteUrl = "jdbc:sqlite:data.db"
+  private val sqliteDriver = "org.sqlite.JDBC"
+
   private var initialized = false
 
   fun initialize(forceInitialization: Boolean = false) {
     if (!initialized || forceInitialization) {
       AppDB.initialize(
-//        jdbcUrl = "jdbc:h2:mem:regular",
-//        jdbcDriverClassName = "org.h2.Driver",
-        jdbcUrl = "jdbc:sqlite:data.db",
-        jdbcDriverClassName = "org.sqlite.JDBC",
-        username = "",
-        password = "",
+        jdbcUrl = System.getenv("DB_JDBC_URL") ?: sqliteUrl,
+        jdbcDriverClassName = System.getenv("DB_JDBC_DRIVER") ?: sqliteDriver,
+        username = System.getenv("DB_USERNAME") ?: "",
+        password = System.getenv("DB_PASSWORD") ?: "",
         maximumPoolSize = 3
       ) {
         SchemaUtils.create(Products, Stock, Sales, SaleItems)
