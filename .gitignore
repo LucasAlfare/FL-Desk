@@ -1,5 +1,6 @@
 ### My Own Project ###
 .env
+src/main/resources/assets/reactViteBuild/
 
 .gradle
 build/
