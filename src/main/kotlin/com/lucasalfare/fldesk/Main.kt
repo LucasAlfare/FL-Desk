@@ -89,7 +89,15 @@ fun Application.setupServer() {
           }
         }
       }.getOrElse {
-        throw AppError("Error creating product in the database", parent = it)
+        if (it is AppError) {
+          throw it
+        } else {
+          throw AppError(
+            status = HttpStatusCode.UnprocessableEntity,
+            customMessage = "Error creating product in the database",
+            parent = it
+          )
+        }
       }
       return@post call.respond(HttpStatusCode.Created, result)
     }
@@ -108,7 +116,8 @@ fun Application.setupServer() {
             Products.selectAll().where { Products.barcode eq req.barcode }.singleOrNull().let { pq ->
               if (pq == null) {
                 throw AppError(
-                  status = HttpStatusCode.NotFound, customMessage = "Item of barcode [${req.barcode}] not found"
+                  status = HttpStatusCode.UnprocessableEntity,
+                  customMessage = "Item of barcode [${req.barcode}] not found"
                 )
               }
 
@@ -127,7 +136,7 @@ fun Application.setupServer() {
               }
 
               Stock.update(where = { Stock.productId eq searchedId }) {
-                it[Stock.productId] = searchedQuantity - req.quantity
+                it[Stock.quantity] = searchedQuantity - req.quantity
               }
 
               ProductDTO(
@@ -144,7 +153,6 @@ fun Application.setupServer() {
             p.quantity * p.price
           }
 
-
           val saleId = Sales.insertAndGetId {
             it[Sales.instant] = request.date.toLocalDateTime(TimeZone.UTC)
             it[Sales.total] = total
@@ -160,10 +168,28 @@ fun Application.setupServer() {
             }
           }
 
-          // if fails, the transaction will just rollbacks
-          paymentHandler.pay(amount = total, request.paymentType)
+          runCatching {
+            // if fails, the transaction will just rollbacks
+            paymentHandler.pay(amount = total, request.paymentType)
+          }.onFailure { t ->
+            if (t is AppError) {
+              throw t
+            } else {
+              throw AppError(
+                status = HttpStatusCode.UnprocessableEntity,
+                customMessage = "Payment not accepted!",
+                parent = t
+              )
+            }
+          }
 
           saleId
+        }
+      }.getOrElse {
+        if (it is AppError) {
+          throw it
+        } else {
+          throw AppError(customMessage = "Error creating sale.", parent = it)
         }
       }
       return@post call.respond(HttpStatusCode.Created, result)
@@ -193,7 +219,11 @@ fun Application.setupServer() {
           }
         }
       }.getOrElse {
-        throw AppError(customMessage = "Error retrieving all sales.", parent = it)
+        if (it is AppError) {
+          throw it
+        } else {
+          throw AppError(customMessage = "Error retrieving all sales.", parent = it)
+        }
       }
 
       return@get call.respond(HttpStatusCode.OK, result)
