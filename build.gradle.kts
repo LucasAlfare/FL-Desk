@@ -1,3 +1,6 @@
+val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+val npmCommand = if (isWindows) "npm.cmd" else "npm"
+
 plugins {
   kotlin("jvm") version "2.1.20"
   id("org.jetbrains.kotlin.plugin.serialization") version "2.1.20"
@@ -19,9 +22,34 @@ dependencies {
   testImplementation(kotlin("test"))
 }
 
+val buildWeb by tasks.registering(Exec::class) {
+  workingDir = file("web-client")
+  commandLine = listOf(npmCommand, "install")
+}
+
+val viteBuild by tasks.registering(Exec::class) {
+  dependsOn(buildWeb)
+  workingDir = file("web-client")
+  commandLine = listOf(npmCommand, "run", "build")
+}
+
+val copyWebDist by tasks.registering(Copy::class) {
+  dependsOn(viteBuild)
+  from("web-client/dist")
+  into("src/main/resources/assets")
+}
+
+tasks.register("fullBuild") {
+  group = "build"
+  description = "Builds frontend and assembles backend"
+  dependsOn(copyWebDist)
+  dependsOn("assemble") // build backend without tests
+}
+
 tasks.test {
   useJUnitPlatform()
 }
+
 kotlin {
   jvmToolchain(21)
 }
