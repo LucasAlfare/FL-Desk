@@ -5,6 +5,9 @@ Este sistema backend é focado em dois domínios principais:
 1. **Produtos** — controle de estoque (nome, código de barras, preço)
 2. **Vendas** — registro de compras com total indexado
 
+Após estabilização, será incluídas instruções de build/run para este projeto,
+as quais usarão `Docker`. 
+
 ## 🌐 Base URL
 
     http://localhost:3000
@@ -37,14 +40,7 @@ Busca informações de um produto pelo código de barras.
 ### ✅ Resposta Esperada
 
     Status: 200 OK
-    Body:
-        {
-            "id": 1,
-            "barcode": "1234567890123",
-            "name": "Produto Teste",
-            "price": 10,
-            "quantity": 100
-        }
+    Body: ProductDTO (ver definição abaixo)
 
 ### ⚠️ Erros Possíveis
 
@@ -55,11 +51,12 @@ Busca informações de um produto pelo código de barras.
 
 ## ➕ POST /products
 
-Cria um novo produto no sistema.
+Cria um novo produto no sistema (e registra seu estoque inicial).
 
 ### 📥 Corpo da Requisição
 
     Content-Type: application/json
+    Body: ProductDTO (sem campo "id")
 
     {
         "barcode": "1234567890123",
@@ -71,7 +68,7 @@ Cria um novo produto no sistema.
 ### ✅ Resposta Esperada
 
     Status: 201 Created
-    Body: ID do produto criado (número)
+    Body: ID do produto criado (número inteiro)
 
 ### ⚠️ Erros Possíveis
 
@@ -81,15 +78,16 @@ Cria um novo produto no sistema.
 
 ## 💰 POST /sales
 
-Registra uma venda com itens e tipo de pagamento.
+Registra uma nova venda com a lista de itens comprados e a forma de pagamento.
 
 ### 📥 Corpo da Requisição
 
     Content-Type: application/json
+    Body: SaleRequestDTO
 
     {
         "paymentType": "Pix",
-        "date": "2025-05-14T15:00:00Z",  // opcional, pode ser omitido se a data for gerada no backend
+        "date": "2025-05-14T15:00:00Z",  // opcional: pode ser omitido
         "items": [
             {
                 "barcode": "1234567890123",
@@ -101,7 +99,7 @@ Registra uma venda com itens e tipo de pagamento.
 ### ✅ Resposta Esperada
 
     Status: 201 Created
-    Body: ID da venda (número)
+    Body: ID da venda (número inteiro)
 
 ### ⚠️ Erros Possíveis
 
@@ -111,60 +109,115 @@ Registra uma venda com itens e tipo de pagamento.
 
 ## 📄 GET /sales
 
-Lista todas as vendas realizadas.
+Lista todas as vendas já registradas no sistema, incluindo detalhes dos itens vendidos.
 
 ### ✅ Resposta Esperada
 
     Status: 200 OK
-    Body:
-        [
-            {
-                "id": 1,
-                "date": "2025-05-14T15:00:00Z",
-                "paymentType": "Pix",
-                "items": [
-                    {
-                        "productId": 1,
-                        "quantitySold": 2,
-                        "priceAtMoment": 10
-                    }
-                ]
-            }
-        ]
+    Body: Lista de SaleDetailDTO
+
+    [
+        {
+            "id": 1,
+            "date": "2025-05-14T15:00:00Z",
+            "paymentType": "Pix",
+            "items": [
+                {
+                    "productId": 1,
+                    "quantitySold": 2,
+                    "priceAtMoment": 10
+                }
+            ]
+        }
+    ]
 
 ### ⚠️ Erros Possíveis
 
-- 500 Internal Server Error – Falha ao buscar vendas do banco.
+- 500 Internal Server Error – Falha ao buscar vendas no banco.
 
 ---
 
-## 📦 Modelos de Dados
+## 🧱 Modelos de Dados (DTOs)
 
-### ProductDTO
+### 📦 ProductDTO
+
+Representa um produto no sistema, tanto na entrada (criação) quanto na resposta da API.
+
+#### Campos
+
+- `id` (opcional na criação): identificador interno do produto.
+- `barcode`: código de barras único do produto.
+- `name`: nome do produto.
+- `price`: preço unitário.
+- `quantity`: quantidade atual em estoque (na criação) ou disponível (em consulta).
+
+#### Exemplo
 
     {
+        "id": 1,
         "barcode": "1234567890123",
         "name": "Produto Teste",
         "price": 10,
         "quantity": 100
     }
 
-### ProductSaleDTO
+---
+
+### 🛒 ProductSaleDTO
+
+Objeto que representa um item sendo comprado durante uma venda.
+
+#### Campos
+
+- `barcode`: código de barras do produto a ser vendido.
+- `quantity`: quantidade desejada.
+
+#### Exemplo
 
     {
         "barcode": "1234567890123",
         "quantity": 2
     }
 
-### SaleRequestDTO
+---
+
+### 🧾 SaleRequestDTO
+
+Objeto enviado pelo client para registrar uma venda.
+
+#### Campos
+
+- `paymentType`: forma de pagamento usada.
+- `date` (opcional): data/hora da venda (UTC). Pode ser omitida e o backend registra o horário atual.
+- `items`: lista de `ProductSaleDTO`, representando os produtos vendidos.
+
+#### Exemplo
 
     {
         "paymentType": "Pix",
         "date": "2025-05-14T15:00:00Z",
-        "items": [ ...ProductSaleDTO[] ]
+        "items": [
+            {
+                "barcode": "1234567890123",
+                "quantity": 2
+            }
+        ]
     }
 
-### SaleDetailDTO
+---
+
+### 📄 SaleDetailDTO
+
+Objeto retornado pela API representando os detalhes completos de uma venda.
+
+#### Campos
+
+- `id`: identificador da venda.
+- `date`: data e hora da venda.
+- `paymentType`: forma de pagamento usada.
+- `items`: lista de `ProductSoldDTO`.
+
+#### Exemplo
 
     {
         "id": 1,
@@ -181,11 +234,31 @@ Lista todas as vendas realizadas.
 
 ---
 
-## 💳 Tipos de Pagamento
+### 🧾 ProductSoldDTO
+
+Objeto que representa um item vendido, com informações da venda.
+
+#### Campos
+
+- `productId`: identificador do produto vendido.
+- `quantitySold`: quantidade vendida.
+- `priceAtMoment`: preço do produto no momento da venda.
+
+#### Exemplo
+
+    {
+        "productId": 1,
+        "quantitySold": 2,
+        "priceAtMoment": 10
+    }
+
+---
+
+## 💳 Formas de Pagamento Válidas
 
 Campo `paymentType` aceita os seguintes valores:
 
-- "Cash"
-- "Credit"
-- "Debit"
-- "Pix"
+- `"Cash"`
+- `"Credit"`
+- `"Debit"`
+- `"Pix"`
