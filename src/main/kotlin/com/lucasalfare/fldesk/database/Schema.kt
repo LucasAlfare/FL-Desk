@@ -15,13 +15,13 @@ object Stock : IntIdTable("Stock") {
   val quantity = integer("quantity")
 }
 
-object Sales : IntIdTable("Sales") {
+object  Sales : IntIdTable("Sales") {
   val instant = datetime("instant")
   val total = integer("total")
   val paymentType = enumeration<PaymentType>("payment_type")
 }
 
-  object SaleItems : IntIdTable("SaleItems") {
+object SaleItems : IntIdTable("SaleItems") {
   val saleId = integer("sale_id").references(Sales.id)
   val productId = integer("product_id").references(Products.id)
   val quantitySold = integer("quantity_sold")
