@@ -6,7 +6,12 @@ Este sistema backend é focado em dois domínios principais:
 2. **Vendas** — registro de compras com total indexado
 
 Após estabilização, será incluídas instruções de build/run para este projeto,
-as quais usarão `Docker`. 
+as quais usarão `Docker`.
+
+Também não temos conexão com nenhum serviço real de pagamentos, por enquanto,
+o pagamento é simplesmente simulado e sempre válido. Após estabilização da API,
+iremos integrar com algum serviço de pagamento compatível com Crédito, Débito
+e/ou Pix.
 
 ## 🌐 Base URL
 
