@@ -77,7 +77,6 @@ fun Application.setupServer() {
       call.respondText { "Hello from KTOR!" }
     }
 
-    // curl http://localhost:3000/products/barcode/1234567890123
     get("/products/barcode/{barcode}") {
       val barcode = call.pathParameters["barcode"] ?: throw AppError("Bad request")
       return@get exec {
@@ -104,7 +103,6 @@ fun Application.setupServer() {
       }
     }
 
-    // curl -X POST http://localhost:3000/products -H "Content-Type: application/json" -d '{\"barcode\":\"1234567890123\",\"name\":\"Produto Teste\",\"price\":10,\"quantity\":100}'
     post("/products") {
       val request = call.receive<ProductDTO>()
       val result = runCatching {
@@ -134,7 +132,6 @@ fun Application.setupServer() {
       return@post call.respond(HttpStatusCode.Created, result)
     }
 
-    // curl -X POST http://localhost:3000/sales -H "Content-Type: application/json" -d '{\"paymentType\":\"Pix\",\"date\":\"2025-05-14T15:00:00Z\",\"items\":[{\"barcode\":\"1234567890123\",\"quantity\":2}]}'
     post("/sales") {
       /*
       we receive simple data from client: payment type and items. The
@@ -176,7 +173,7 @@ fun Application.setupServer() {
                 barcode = pq[Products.barcode],
                 name = pq[Products.name],
                 price = pq[Products.price],
-                quantity = searchedQuantity
+                quantity = req.quantity
               )
             }
           }
@@ -227,7 +224,6 @@ fun Application.setupServer() {
       return@post call.respond(HttpStatusCode.Created, result)
     }
 
-    // curl http://localhost:3000/sales
     get("/sales") {
       val result = runCatching {
         exec {
@@ -256,6 +252,41 @@ fun Application.setupServer() {
         } else {
           throw AppError(customMessage = "Error retrieving all sales.", parent = it)
         }
+      }
+
+      return@get call.respond(HttpStatusCode.OK, result)
+    }
+
+    get("/sales/{saleId}") {
+      val saleId = call.pathParameters["saleId"] ?: throw AppError(
+        status = HttpStatusCode.BadRequest,
+        customMessage = "Sale ID not supplied."
+      )
+
+      val result = runCatching {
+        exec {
+          Sales.selectAll().where { Sales.id eq saleId.toInt() }.singleOrNull().let { sq ->
+            if (sq == null) throw AppError(status = HttpStatusCode.NotFound, customMessage = "Sale not found")
+
+            val soldItems = SaleItems.selectAll().where { SaleItems.saleId eq saleId.toInt() }.map { siq ->
+              ProductSoldDTO(
+                productId = siq[SaleItems.productId],
+                quantitySold = siq[SaleItems.quantitySold],
+                priceAtMoment = siq[SaleItems.priceAtMoment]
+              )
+            }
+
+            return@let SaleDetailDTO(
+              id = saleId.toInt(),
+              date = sq[Sales.instant].toInstant(TimeZone.UTC),
+              paymentType = sq[Sales.paymentType],
+              items = soldItems
+            )
+          }
+        }
+      }.getOrElse {
+        if (it is AppError) throw it
+        else throw AppError(customMessage = "Error retrieving sale by ID.", parent = it)
       }
 
       return@get call.respond(HttpStatusCode.OK, result)
