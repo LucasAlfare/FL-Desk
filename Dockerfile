@@ -1,30 +1,31 @@
-FROM node:20-alpine as node_stage
+FROM node:20-alpine
 LABEL authors="Francisco Lucas"
 
-FROM gradle:8.10.2-alpine as gradle_stage
+# Instala Java 21 e Gradle
+RUN apk add --no-cache openjdk21 gradle
 
-# uses stuff from node_stage
-COPY --from=node_stage /usr/local/bin/node /usr/local/bin/node
-COPY --from=node_stage /usr/local/bin/npm /usr/local/bin/npm
-COPY --from=node_stage /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY --from=node_stage /opt /opt
-
-# Variáveis de ambiente para npm funcionar bem
-# node env
+# Define variáveis de ambiente úteis
 ENV NODE_PATH=/usr/local/lib/node_modules
 ENV PATH=$PATH:/usr/local/bin
 
+# Copia todos os arquivos do projeto para o contêiner
 COPY . /app
 WORKDIR /app
-RUN cd /app
-# gradle fullBuild is used to:
-# - build without running tests;
-# - build the vite/react frontend using node;
-# also, daemons are not needed because gradle will be discarded
+
+# Roda o build completo (frontend + backend)
 RUN gradle fullBuild --no-daemon
 
-FROM eclipse-temurin:21-alpine as jdk_stage
-EXPOSE 80
+# Segunda etapa: imagem final só com o JDK e o .jar gerado
+FROM eclipse-temurin:21-alpine
+
+# Expõe a porta que sua aplicação Java escuta
+EXPOSE 3000
+
+# Cria diretório da aplicação
 RUN mkdir /app
-COPY --from=gradle_stage /app /app
+
+# Copia os arquivos gerados na etapa anterior
+COPY --from=0 /app /app
+
+# Comando de entrada para rodar o JAR
 ENTRYPOINT ["java", "-jar", "/app/build/libs/FL-Desk-1.0.jar"]
