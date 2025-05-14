@@ -69,7 +69,7 @@ fun Application.setupServer() {
   configureCORS()
   configureSerialization()
   configureStatusPages()
-  configureStaticHtml(Pair("/", "index.html"))
+  configureStaticHtml(Pair("/", "reactViteBuild/index.html"))
   configureRouting {
     get("/health") {
       call.respondText { "Hello from KTOR!" }
