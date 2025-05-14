@@ -28,7 +28,6 @@ val paymentHandler = object : PaymentHandler {
 }
 
 fun main() {
-
   ExposedDatabase.initialize()
 
   startWebServer(port = 3000) {

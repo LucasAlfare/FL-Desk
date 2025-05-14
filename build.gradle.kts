@@ -13,8 +13,9 @@ repositories {
 }
 
 dependencies {
-  implementation("com.github.LucasAlfare:FL-Base:1.1.2")
+  implementation("com.github.LucasAlfare:FL-Base:1.1.1")
   implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.61.0")
+  testImplementation("io.ktor:ktor-server-test-host:3.1.1")
   testImplementation(kotlin("test"))
 }
 

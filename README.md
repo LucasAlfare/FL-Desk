@@ -5,210 +5,187 @@ Este sistema backend é focado em dois domínios principais:
 1. **Produtos** — controle de estoque (nome, código de barras, preço)
 2. **Vendas** — registro de compras com total indexado
 
+## 🌐 Base URL
+
+    http://localhost:3000
+
 ---
 
-## 📦 DTOs (Data Transfer Objects)
+## ✅ GET /health
 
-### ProdutoDTO
+Verifica se a API está operando corretamente.
 
-    {
-      "id": "123",
-      "codigo_barras": "7891234567890",
-      "nome": "Refrigerante Cola 2L",
-      "preco": 6.50
-    }
+### ✅ Resposta Esperada
 
-### VendaProdutoDTO (item vendido em uma venda)
+    Status: 200 OK
+    Body: "Hello from KTOR!"
 
-    {
-      "produto_id": "123",
-      "quantidade": 2,
-      "preco_unitario": 6.50
-    }
+---
 
-### VendaDTO (detalhes de uma venda completa)
+## 📦 GET /products/barcode/{barcode}
 
-    {
-      "id": "venda_001",
-      "data": "2025-05-13T15:34:00Z",
-      "forma_pagamento": "dinheiro",
-      "itens": [
+Busca informações de um produto pelo código de barras.
+
+### 🔧 Parâmetros
+
+- barcode (path param): código de barras do produto (string).
+
+### 🔄 Exemplo de Requisição
+
+    GET /products/barcode/1234567890123
+
+### ✅ Resposta Esperada
+
+    Status: 200 OK
+    Body:
         {
-          "produto_id": "123",
-          "quantidade": 2,
-          "preco_unitario": 6.50
-        },
-        {
-          "produto_id": "456",
-          "quantidade": 1,
-          "preco_unitario": 12.00
+            "id": 1,
+            "barcode": "1234567890123",
+            "name": "Produto Teste",
+            "price": 10,
+            "quantity": 100
         }
-      ],
-      "total": 25.00
+
+### ⚠️ Erros Possíveis
+
+- 400 Bad Request – Se `barcode` estiver ausente.
+- 404 Not Found – Produto não encontrado ou sem estoque.
+
+---
+
+## ➕ POST /products
+
+Cria um novo produto no sistema.
+
+### 📥 Corpo da Requisição
+
+    Content-Type: application/json
+
+    {
+        "barcode": "1234567890123",
+        "name": "Produto Teste",
+        "price": 10,
+        "quantity": 100
+    }
+
+### ✅ Resposta Esperada
+
+    Status: 201 Created
+    Body: ID do produto criado (número)
+
+### ⚠️ Erros Possíveis
+
+- 422 Unprocessable Entity – Produto já cadastrado ou erro ao inserir no banco.
+
+---
+
+## 💰 POST /sales
+
+Registra uma venda com itens e tipo de pagamento.
+
+### 📥 Corpo da Requisição
+
+    Content-Type: application/json
+
+    {
+        "paymentType": "Pix",
+        "date": "2025-05-14T15:00:00Z",  // opcional, pode ser omitido se a data for gerada no backend
+        "items": [
+            {
+                "barcode": "1234567890123",
+                "quantity": 2
+            }
+        ]
+    }
+
+### ✅ Resposta Esperada
+
+    Status: 201 Created
+    Body: ID da venda (número)
+
+### ⚠️ Erros Possíveis
+
+- 422 Unprocessable Entity – Produto não encontrado, estoque insuficiente ou falha no pagamento.
+
+---
+
+## 📄 GET /sales
+
+Lista todas as vendas realizadas.
+
+### ✅ Resposta Esperada
+
+    Status: 200 OK
+    Body:
+        [
+            {
+                "id": 1,
+                "date": "2025-05-14T15:00:00Z",
+                "paymentType": "Pix",
+                "items": [
+                    {
+                        "productId": 1,
+                        "quantitySold": 2,
+                        "priceAtMoment": 10
+                    }
+                ]
+            }
+        ]
+
+### ⚠️ Erros Possíveis
+
+- 500 Internal Server Error – Falha ao buscar vendas do banco.
+
+---
+
+## 📦 Modelos de Dados
+
+### ProductDTO
+
+    {
+        "barcode": "1234567890123",
+        "name": "Produto Teste",
+        "price": 10,
+        "quantity": 100
+    }
+
+### ProductSaleDTO
+
+    {
+        "barcode": "1234567890123",
+        "quantity": 2
+    }
+
+### SaleRequestDTO
+
+    {
+        "paymentType": "Pix",
+        "date": "2025-05-14T15:00:00Z",
+        "items": [ ...ProductSaleDTO[] ]
+    }
+
+### SaleDetailDTO
+
+    {
+        "id": 1,
+        "date": "2025-05-14T15:00:00Z",
+        "paymentType": "Pix",
+        "items": [
+            {
+                "productId": 1,
+                "quantitySold": 2,
+                "priceAtMoment": 10
+            }
+        ]
     }
 
 ---
 
-## 🔁 Fluxo geral do frontend (client)
+## 💳 Tipos de Pagamento
 
-1. Usuário no caixa escaneia o código de barras
-2. O client envia o código para o backend e recebe nome e preço
-3. O client exibe os itens na tela e permite ajuste de quantidades
-4. Ao finalizar a venda:
-    - O client envia os produtos (id, quantidade, preço) e forma de pagamento
-    - O backend calcula e salva o total
+Campo `paymentType` aceita os seguintes valores:
 
----
-
-## 🛒 Comportamento do client
-
-### Durante a venda:
-
-- Escaneia o código de barras → GET /produtos/codigo/{codigo_barras}
-- Mostra os produtos em uma lista local com quantidades
-- Mantém o total parcial atualizado no frontend
-
-### Ao finalizar a venda:
-
-- Envia para o backend:
-    - Lista de produtos (produto_id, quantidade, preco_unitario)
-    - Forma de pagamento
-- O backend registra a venda e calcula/salva o total
-
----
-
-## 📡 Endpoints
-
-### 🔍 Buscar produto por código de barras
-
-GET /produtos/codigo/{codigo_barras}
-
-**Resposta (200 OK):**
-
-    {
-      "id": "123",
-      "nome": "Sabão em pó 1kg",
-      "preco": 7.80,
-      "codigo_barras": "7891234567890"
-    }
-
-**Resposta (404 Not Found):**
-
-    {
-      "erro": "Produto não encontrado"
-    }
-
----
-
-### ➕ Criar nova venda
-
-POST /vendas
-
-**Request:**
-
-    {
-      "forma_pagamento": "cartao",
-      "itens": [
-        {
-          "produto_id": "123",
-          "quantidade": 2,
-          "preco_unitario": 6.50
-        },
-        {
-          "produto_id": "456",
-          "quantidade": 1,
-          "preco_unitario": 12.00
-        }
-      ]
-    }
-
-**Resposta (201 Created):**
-
-    {
-      "id": "venda_001",
-      "data": "2025-05-13T15:34:00Z",
-      "forma_pagamento": "cartao",
-      "itens": [ ... ],
-      "total": 25.00
-    }
-
-**Resposta (400 Bad Request):**
-
-    {
-      "erro": "Dados inválidos"
-    }
-
----
-
-### 📄 Listar vendas
-
-GET /vendas
-
-**Resposta (200 OK):**
-
-    [
-      {
-        "id": "venda_001",
-        "data": "2025-05-13T15:34:00Z",
-        "forma_pagamento": "cartao",
-        "itens": [ ... ],
-        "total": 25.00
-      },
-      {
-        "id": "venda_002",
-        "data": "2025-05-13T16:00:00Z",
-        "forma_pagamento": "dinheiro",
-        "itens": [ ... ],
-        "total": 18.50
-      }
-    ]
-
-**Resposta (404 Not Found):**
-
-    {
-      "erro": "Nenhuma venda encontrada"
-    }
-
----
-
-### 🧾 Ver detalhes de uma venda
-
-GET /vendas/{id}
-
-**Resposta (200 OK):**
-
-    {
-      "id": "venda_001",
-      "data": "2025-05-13T15:34:00Z",
-      "forma_pagamento": "cartao",
-      "itens": [
-        {
-          "produto_id": "123",
-          "quantidade": 2,
-          "preco_unitario": 6.50
-        },
-        {
-          "produto_id": "456",
-          "quantidade": 1,
-          "preco_unitario": 12.00
-        }
-      ],
-      "total": 25.00
-    }
-
-**Resposta (404 Not Found):**
-
-    {
-      "erro": "Venda não encontrada"
-    }
-
----
-
-## ✅ Resumo — O que o client faz?
-
-| Ação              | O que o frontend faz |
-|-------------------|----------------------|
-| Adicionar produto | Envia código de barras → recebe nome/preço/id |
-| Mostrar carrinho  | Mantém localmente a lista de produtos com quantidades e preços |
-| Finalizar venda   | Envia lista de produto_id, quantidade, preco_unitario, e forma de pagamento |
-| Total da compra   | O backend calcula e salva o total |
+- "Cash"
+- "Credit"
+- "Debit"
+- "Pix"
