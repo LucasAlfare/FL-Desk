@@ -36,7 +36,7 @@ val viteBuild by tasks.registering(Exec::class) {
 val copyWebDist by tasks.registering(Copy::class) {
   dependsOn(viteBuild)
   from("web-client/dist")
-  into("src/main/resources/assets/reactViteBuild")
+  into("src/main/resources/assets")
   dependsOn(tasks.named("processResources"))
 }
 

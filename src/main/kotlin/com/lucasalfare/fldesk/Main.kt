@@ -36,26 +36,28 @@ suspend fun main() {
   ExposedDatabase.initialize()
 
   // create fake products
-  exec {
-    Products.insertAndGetId {
-      it[Products.barcode] = "0001"
-      it[Products.name] = "Produto 1"
-      it[Products.price] = 500
-    }.value.also { id ->
-      Stock.insert {
-        it[Stock.productId] = id
-        it[Stock.quantity] = 20
+  runCatching {
+    exec {
+      Products.insertAndGetId {
+        it[Products.barcode] = "0001"
+        it[Products.name] = "Produto 1"
+        it[Products.price] = 500
+      }.value.also { id ->
+        Stock.insert {
+          it[Stock.productId] = id
+          it[Stock.quantity] = 20
+        }
       }
-    }
 
-    Products.insertAndGetId {
-      it[Products.barcode] = "0002"
-      it[Products.name] = "Produto 2 fake"
-      it[Products.price] = 750
-    }.value.also { id ->
-      Stock.insert {
-        it[Stock.productId] = id
-        it[Stock.quantity] = 50
+      Products.insertAndGetId {
+        it[Products.barcode] = "0002"
+        it[Products.name] = "Produto 2 fake"
+        it[Products.price] = 750
+      }.value.also { id ->
+        Stock.insert {
+          it[Stock.productId] = id
+          it[Stock.quantity] = 50
+        }
       }
     }
   }
@@ -69,7 +71,7 @@ fun Application.setupServer() {
   configureCORS()
   configureSerialization()
   configureStatusPages()
-  configureStaticHtml(Pair("/", "reactViteBuild/index.html"))
+  configureStaticHtml(Pair("/", "index.html"))
   configureRouting {
     get("/health") {
       call.respondText { "Hello from KTOR!" }
