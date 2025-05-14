@@ -11,8 +11,10 @@ object ExposedDatabase {
   fun initialize(forceInitialization: Boolean = false) {
     if (!initialized || forceInitialization) {
       AppDB.initialize(
-        jdbcUrl = "jdbc:h2:mem:regular",
-        jdbcDriverClassName = "org.h2.Driver",
+//        jdbcUrl = "jdbc:h2:mem:regular",
+//        jdbcDriverClassName = "org.h2.Driver",
+        jdbcUrl = "jdbc:sqlite:data.db",
+        jdbcDriverClassName = "org.sqlite.JDBC",
         username = "",
         password = "",
         maximumPoolSize = 3
